@@ -3,17 +3,13 @@
 <head>
     <base target="_top">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- อัพเดท CSP -->
     <meta http-equiv="Content-Security-Policy" content="
-        default-src * gap: data: blob: 'unsafe-inline' 'unsafe-eval' ws: wss:;
-        img-src * data: blob: 'unsafe-inline';
-        connect-src * 'unsafe-inline';
-        frame-src *;
+        default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
         media-src * blob: data:;
-        script-src * 'unsafe-inline' 'unsafe-eval';
-        style-src * 'unsafe-inline';">
+        img-src * data: blob:;
+        frame-src https://*.google.com https://*.googleusercontent.com;">
     <title>MANIT RANONG GROUP ส่วนบันทึกการขาย</title>
     <style>
         body, html {
@@ -26,14 +22,13 @@
             width: 100%;
             height: 100vh;
             border: none;
-            overflow: hidden;
         }
     </style>
 </head>
 <body>
     <iframe 
         src="https://script.google.com/macros/s/AKfycbzHjU01-QjB5qWZEvWy5P8Vf8eppWhdyuZshvbBKaSbIeb0nKIVHwBj5gVmYknqJeQN/exec"
-        allow="camera *; microphone *; fullscreen *; display-capture *"
+        allow="camera; microphone; geolocation"
         allowfullscreen
         frameborder="0"
         style="width: 100%; height: 100vh;">
