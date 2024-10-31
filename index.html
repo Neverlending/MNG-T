@@ -3,35 +3,120 @@
 <head>
     <base target="_top">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- ปรับปรุง Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
-        default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
-        media-src * blob: data:;
-        img-src * data: blob:;
-        frame-src https://*.google.com https://*.googleusercontent.com;">
+        default-src * 'unsafe-inline' 'unsafe-eval' data: blob: mediastream: 'self';
+        media-src * mediastream: blob: data: 'self';
+        img-src * data: blob: 'self';
+        connect-src * 'self';
+        frame-src * 'self';
+        worker-src * blob: 'self';">
     <title>MANIT RANONG GROUP ส่วนบันทึกการขาย</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
+            width: 100%;
             overflow: hidden;
+            position: fixed;
         }
         iframe {
             width: 100%;
-            height: 100vh;
+            height: 100%;
             border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        #permissions-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
         }
     </style>
 </head>
 <body>
+    <div id="permissions-overlay">
+        <div>
+            <h2>ต้องการสิทธิ์การใช้งานกล้อง</h2>
+            <p>กรุณาอนุญาตการใช้งานกล้องเพื่อใช้งานแอปพลิเคชัน</p>
+            <button onclick="requestPermissions()">อนุญาต</button>
+        </div>
+    </div>
+
     <iframe 
+        id="app-frame"
         src="https://script.google.com/macros/s/AKfycbxbaRT7EfKPMDuiIBAI5t09clXFrSIU2XmJBumMg0hY3EaZXTgKot-b6TUOwDaMH7WA/exec"
-        allow="camera; microphone; geolocation"
-        allowfullscreen
-        frameborder="0"
-        style="width: 100%; height: 100vh;">
+        allow="camera *; microphone *; geolocation *; fullscreen *; autoplay *; clipboard-write *"
+        allowfullscreen="true"
+        webkitallowfullscreen="true" 
+        mozallowfullscreen="true"
+        frameborder="0">
     </iframe>
+
+    <script>
+        // ฟังก์ชันสำหรับขอสิทธิ์การใช้งานกล้อง
+        async function requestPermissions() {
+            try {
+                // ขอสิทธิ์กล้อง
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true,
+                    audio: true 
+                });
+                stream.getTracks().forEach(track => track.stop());
+                
+                // ซ่อน overlay เมื่อได้รับอนุญาต
+                document.getElementById('permissions-overlay').style.display = 'none';
+                
+                // ส่งข้อความไปยัง iframe ว่าได้รับสิทธิ์แล้ว
+                const iframe = document.getElementById('app-frame');
+                iframe.contentWindow.postMessage({ type: 'CAMERA_PERMISSION_GRANTED' }, '*');
+            } catch (err) {
+                console.error('Permission error:', err);
+                alert('ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบการตั้งค่าสิทธิ์การใช้งาน');
+            }
+        }
+
+        // รับ message จาก iframe
+        window.addEventListener('message', function(event) {
+            // ตรวจสอบว่า message มาจาก Google Apps Script
+            if (event.origin.includes('script.google.com')) {
+                if (event.data.type === 'REQUEST_CAMERA_PERMISSION') {
+                    document.getElementById('permissions-overlay').style.display = 'flex';
+                }
+            }
+        });
+
+        // ตรวจสอบสิทธิ์เมื่อโหลดหน้า
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const result = await navigator.permissions.query({ name: 'camera' });
+                if (result.state === 'granted') {
+                    // มีสิทธิ์แล้ว
+                    const iframe = document.getElementById('app-frame');
+                    iframe.contentWindow.postMessage({ type: 'CAMERA_PERMISSION_GRANTED' }, '*');
+                } else if (result.state === 'prompt') {
+                    // แสดง overlay เพื่อขอสิทธิ์
+                    document.getElementById('permissions-overlay').style.display = 'flex';
+                }
+            } catch (err) {
+                console.error('Permissions API error:', err);
+            }
+        });
+    </script>
 </body>
 </html>
